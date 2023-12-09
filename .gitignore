@@ -1,0 +1,9 @@
+# Ignore database connection file
+database/config.py
+.streamlit/secrets.toml
+# Ignore virtual environment
+.venv/
+# Ignore other files and directories
+*.pyc
+__pycache__/
+*.csv
