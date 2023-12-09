@@ -7,4 +7,5 @@ pgcopy==1.5.0
 plotly==5.18.0
 psycopg2-binary
 sqlalchemy
+libpq-dev
 streamlit
