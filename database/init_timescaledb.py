@@ -8,14 +8,14 @@ connection = psycopg2.connect(database=config.DB_NAME,
                             password=config.DB_PASS, 
                             port=config.DB_PORT)
 
-table_name = "crypto_database4"
+table_name = "dataset_by_hour"
 
 # SQL script
 sql_script = """
 BEGIN;
 
 CREATE TABLE public.{table_name} (
-    "time" timestamp(0) NOT NULL,
+    "time_hour" timestamp(0) NOT NULL,
     symbol varchar NULL,
     price_open float8 NULL,
     price_close float8 NULL,
@@ -28,17 +28,17 @@ CREATE TABLE public.{table_name} (
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 -- Time-based index
-CREATE INDEX ON {table_name} (time DESC);
+CREATE INDEX ON {table_name} (time_hour DESC);
 
 -- symbol-based index
-CREATE INDEX ON {table_name} (symbol, time DESC);
+CREATE INDEX ON {table_name} (symbol, time_hour DESC);
 
 /* 
 Turn the  table into a hypertable.
 This is important to be able to make use of TimescaleDB features later on.
 */
 
-SELECT create_hypertable('{table_name}', 'time');
+SELECT create_hypertable('{table_name}', 'time_hour');
 
 COMMIT;
 """.format(table_name=table_name)

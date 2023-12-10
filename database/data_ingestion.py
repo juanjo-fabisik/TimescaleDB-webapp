@@ -13,17 +13,12 @@ conn = psycopg2.connect(database=config.DB_NAME,
                             port=config.DB_PORT)
 
 
-
-
-
-
-
 # read dataset from disk
 def read_dataset(dataset_filename):
     df = pd.read_csv(dataset_filename) 
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     
-    df = df.rename(columns={'timestamp': 'time', 
+    df = df.rename(columns={'timestamp': 'time_hour', 
                             'close': 'price_close', 
                             'high': 'price_high',
                             'low': 'price_low',
@@ -46,8 +41,8 @@ def main():
     crypto_dataset = read_dataset("raw/trades.csv")
     
     print('Inserting data...')
-    table_name = "crypto_database4"
-    columns = ('time', 'symbol', 'price_high', 'price_low','price_close', 'trading_volume', 'price_open')
+    table_name = "dataset_by_hour"
+    columns = ('time_hour', 'symbol', 'price_high', 'price_low','price_close', 'trading_volume', 'price_open')
     mgr = CopyManager(conn, table_name, columns)
     mgr.copy(crypto_dataset)
     conn.commit()
