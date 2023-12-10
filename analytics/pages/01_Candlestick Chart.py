@@ -1,15 +1,30 @@
 import streamlit as st
 from plotly.subplots import make_subplots
 import datetime
+import plotly.graph_objects as go
 
 st.set_page_config(page_title="Candlestick", page_icon=":bar_chart:",layout="wide")
 
 # Initialize connection.
 conn = st.connection("postgresql", type="sql")
-table_name = "crypto_database4"
+
 # funciton to query the database and plot the results
-def query_and_plot_price_vol(table_name,selected_symbol,startDate,endDate, time_bucket, sma_n1, sma_n2, sma_n3):
-    import plotly.graph_objects as go
+def query_and_plot_price_vol(selected_symbol,startDate,endDate, time_bucket, sma_n1, sma_n2, sma_n3):
+    
+    if "hour" in time_bucket:
+       table_name = "dataset_by_hour"
+       time_col_name = "time_hour"
+    elif "day" in time_bucket:
+       table_name = "dataset_by_day"
+       time_col_name = "time_day"
+    elif "week" in time_bucket:
+       table_name = "dataset_by_week"
+       time_col_name = "time_week"
+    elif "month" in time_bucket:
+       table_name = "dataset_by_month"
+       time_col_name = "time_month"
+
+
     query = """
         -- Outer query computes moving averages and selects relevant columns
         SELECT
@@ -26,21 +41,21 @@ def query_and_plot_price_vol(table_name,selected_symbol,startDate,endDate, time_
         FROM (
           -- Inner query aggregates data into {bucket} buckets
           SELECT 
-            time_bucket('{bucket}', time) AS bucket,
+            time_bucket('{bucket}', {time_col_name}) AS bucket,
             sum(trading_volume) AS volume, 
-            FIRST(price_open, time) AS price_open, 
-            LAST(price_close, time) AS price_close,
+            FIRST(price_open, {time_col_name}) AS price_open, 
+            LAST(price_close, {time_col_name}) AS price_close,
             MAX(price_high) AS price_high,
             MIN(price_low) AS price_low
           FROM {table_name}
           -- Filter data for a specific symbol and time range
           WHERE symbol = '{symbol}' 
-            AND time BETWEEN '{start_date}' AND '{end_date}'
+            AND {time_col_name} BETWEEN '{start_date}' AND '{end_date}'
           GROUP BY bucket
         ) AS custom_interval_data
         -- Order the result set by time bucket
         ORDER BY bucket;
-    """.format(table_name=table_name,bucket=time_bucket, symbol=selected_symbol, start_date=startDate, end_date=endDate,
+    """.format(table_name=table_name,time_col_name=time_col_name,bucket=time_bucket, symbol=selected_symbol, start_date=startDate, end_date=endDate,
                sma_n1_length =str(int(sma_n1)-1),sma_n2_length =str(int(sma_n2)-1),sma_n3_length =str(int(sma_n3)-1) ); 
  
     # Perform query.
@@ -114,7 +129,7 @@ sma_n1, sma_n2, sma_n3= get_indicators_choice(time_unit)
 st.write('## Price and volume of ', selected_symbol)
 st.write('### ', time_bucket,"intervals")
 
-query = query_and_plot_price_vol(table_name,selected_symbol,startDate,endDate, time_bucket, sma_n1, sma_n2, sma_n3)
+query = query_and_plot_price_vol(selected_symbol,startDate,endDate, time_bucket, sma_n1, sma_n2, sma_n3)
 
 with st.expander("See query used to get the data for the plot above"):
     st.code(query, language='sql')

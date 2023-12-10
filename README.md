@@ -19,6 +19,10 @@
    python database/data_ingestion.py
    ```
    The dataset is expected to be in `database/raw/trades.csv`
+6. Create continuous aggregates tables for day, week and month time periods by running:
+   ```
+   python database/continuous_aggregate.py
+   ```
 
 ### Data analysis
 
